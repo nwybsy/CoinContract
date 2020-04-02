@@ -1,0 +1,6 @@
+module CoinContract{
+interface IndexPriceObj{
+
+    string GetIndexPrice(string symbol, out string value); // 获取指数价格
+};
+};
