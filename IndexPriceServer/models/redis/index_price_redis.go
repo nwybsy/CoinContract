@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	price_t time.Duration = 60
+	price_t time.Duration = 6
 )
 
 func IndexPriceAll(s string) (float64, error) {

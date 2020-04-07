@@ -1,7 +1,7 @@
 package servant
 
 import (
-	"MiningProgram/MineServer/validator"
+	"CoinContract/IndexPriceServer/validator"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -39,31 +39,39 @@ const (
 	price_pre = "index_price"
 )
 
+var (
+	// 读写锁
+	priceRW sync.RWMutex
+)
+
 // 计算指数价格
 func (imp *IndexPriceObjImp) GetIndexPrice(Symbol string, Value *string) (ret string, err error) {
 	defer Recover()
 	// 查询redis是否有值
 	price, err := redis.IndexPriceAll(price_pre)
 	if err != nil {
+		priceRW.RLock() // 定义读锁
 		// 获取4个交易所的最新价格
 		other_price := getOtherPrice(Symbol)
 		fmt.Printf("4个交易所的最新价格：%v\n", other_price)
 		// 价格进行加权平均，获取指数价格
-		price = getIndexPrice(other_price)
+		price = getWeightPrice(other_price)
 		fmt.Printf("指数价格price：%f\n", price)
 		// 价格存入redis
 		if err = redis.IndexPriceAdd(price_pre, price); err != nil {
 			*Value = validator.ErrResponse(validator.RedisErr)
 			log.Infof("价格存入redis错误")
+			priceRW.RUnlock()
 			return ret, err
 		}
+		priceRW.RUnlock()
 	}
 	*Value = validator.Response(validator.Succeed, price)
 	return ret, nil
 }
 
 // 价格加权平均
-func getIndexPrice(other_price map[string]float64) float64 {
+func getWeightPrice(other_price map[string]float64) float64 {
 	var price float64 = 0.0
 	// 获取中位数价格
 	mid, _ := getMidPrice(other_price)

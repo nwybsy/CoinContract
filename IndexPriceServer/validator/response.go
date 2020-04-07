@@ -8,8 +8,22 @@ type ResponseBase struct {
 	Data   interface{} `json:"data,omitempty"`
 }
 
+type SuccessMsgResponseBase struct {
+	ErrNo int         `json:"code"`
+	Data  interface{} `json:"data"`
+}
+
 type SuccessResponseBase struct {
 	ErrNo int `json:"code"`
+}
+
+func Response(error int, data interface{}) string {
+	r := &SuccessMsgResponseBase{
+		ErrNo: error,
+		Data:  data,
+	}
+	s, _ := json.Marshal(r)
+	return string(s)
 }
 
 // 返回成功信息
