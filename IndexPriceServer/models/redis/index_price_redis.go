@@ -4,8 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"CoinContract/IndexPriceServer/utils"
-
 	"gopkg.in/redis.v4"
 )
 
@@ -14,7 +12,7 @@ const (
 )
 
 func IndexPriceAll(s string) (float64, error) {
-	r, err := RDB.Get(s).Result()
+	r, err := RDB.Get(s).Float64()
 	if err != nil {
 		if err == redis.Nil {
 			return 0.0, errors.New("redis中价格为空")
@@ -22,7 +20,7 @@ func IndexPriceAll(s string) (float64, error) {
 			return 0.0, errors.New("获取redis中价格失败")
 		}
 	} else {
-		return utils.StringToFloat64(r), nil
+		return r, nil
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"CoinContract/IndexPriceServer/models/redis"
 	"CoinContract/IndexPriceServer/utils"
@@ -66,7 +67,8 @@ func (imp *IndexPriceObjImp) GetIndexPrice(Symbol string, Value *string) (ret st
 		}
 		priceRW.RUnlock()
 	}
-	*Value = validator.Response(validator.Succeed, price)
+	p := fmt.Sprintf("%f", price)
+	*Value = validator.Response(validator.Succeed, p)
 	return ret, nil
 }
 
@@ -220,7 +222,7 @@ func get_kraken_price(symbol string) float64 {
 // Get请求
 func get(url string) (string, error) {
 	client := &http.Client{
-		// Timeout: time.Duration(6 * time.Second),
+		Timeout: time.Duration(6 * time.Second),
 	}
 	// 请求建立连接
 	req, err := http.NewRequest("GET", url, nil)
@@ -230,6 +232,10 @@ func get(url string) (string, error) {
 	}
 	// 提交
 	response, err := client.Do(req)
+	if err != nil {
+		log.Infof("get %s err:%s", url, err)
+		return "", err
+	}
 	body, err1 := ioutil.ReadAll(response.Body)
 	if err1 != nil {
 		log.Infof("read body %s err:%s", url, err)
